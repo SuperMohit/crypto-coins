@@ -1,4 +1,6 @@
-package crypto
+package main
+
+import "github.com/SuperMohit/cryto-coins/internal/crypto/api"
 
 ///  Server  start up code
 ///  listener code
@@ -12,6 +14,7 @@ func main() {
 	// inject in the service
 	// s := NewCryptoservice(r)
 	//  NewCryptoRouter(s)
+	api.NewCryptoRouter()
 
 }
 
