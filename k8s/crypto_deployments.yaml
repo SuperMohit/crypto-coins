@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crypto-deployment
+  labels:
+    app: cryptos
+spec:
+  replicas: 10000
+  selector:
+    matchLabels:
+      app: cryptos
+  template:
+    metadata:
+      labels:
+        app: cryptos
+    spec:
+      containers:
+        - name: cryptos
+          image: nginxdemos/hello:latest
+          ports:
+            - containerPort: 80
+          imagePullPolicy: Always
+

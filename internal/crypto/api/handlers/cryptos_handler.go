@@ -3,43 +3,61 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/SuperMohit/cryto-coins/internal/crypto/usecase"
 	"github.com/gorilla/mux"
 	"io/ioutil"
 	"log"
 	"net/http"
 )
 
-func Cryptospolkahandler(w http.ResponseWriter, r *http.Request) {
+type CryptoHandler struct {
+	service      usecase.CryptoFetcher
+	orderService usecase.CryptoService
+}
+
+func NewCryptoHandler(service usecase.CryptoFetcher) *CryptoHandler {
+	return &CryptoHandler{service: service}
+}
+
+/// variable
+/// Refactor  the common code
+/// hander -   just contains logic to read request and write to the response.
+//  move third party calls to coinbase.go
+
+///  transfer to the service code
+
+func (c *CryptoHandler) CryptosPolkaHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Cryptos POLKA service invoked.")
 
-	url := "https://api.coinbase.com/v2/prices/POLKA-SGD/spot"
-	method := "GET"
-
-	client := &http.Client {
-	}
-	req, err := http.NewRequest(method, url, nil)
-
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	res, err := client.Do(req)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	defer res.Body.Close()
-
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(string(body))
+	// Move below code to the client
+	//url := "https://api.coinbase.com/v2/prices/POLKA-SGD/spot"
+	//method := "GET"
+	//
+	//client := &http.Client {
+	//}
+	//req, err := http.NewRequest(method, url, nil)
+	//
+	//if err != nil {
+	//	fmt.Println(err)
+	//	return
+	//}
+	//
+	//res, err := client.Do(req)
+	//if err != nil {
+	//	fmt.Println(err)
+	//	return
+	//}
+	//defer res.Body.Close()
+	//
+	//body, err := ioutil.ReadAll(res.Body)
+	//if err != nil {
+	//	fmt.Println(err)
+	//	return
+	//}
+	//fmt.Println(string(body))
 
 	var response map[string]interface{}
-	json.Unmarshal([]byte(string(body)), &response)
+	// json.Unmarshal([]byte(string(body)), &response)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 	json.NewEncoder(w).Encode(response)
@@ -51,8 +69,7 @@ func Cryptosdogehandler(w http.ResponseWriter, r *http.Request) {
 	url := "https://api.coinbase.com/v2/prices/DOGE-USD/spot"
 	method := "GET"
 
-	client := &http.Client {
-	}
+	client := &http.Client{}
 	req, err := http.NewRequest(method, url, nil)
 
 	if err != nil {
@@ -88,8 +105,7 @@ func Cryptosethandler(w http.ResponseWriter, r *http.Request) {
 	url := "https://api.coinbase.com/v2/prices/ETH-USD/spot"
 	method := "GET"
 
-	client := &http.Client {
-	}
+	client := &http.Client{}
 	req, err := http.NewRequest(method, url, nil)
 
 	if err != nil {
@@ -119,7 +135,14 @@ func Cryptosethandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-func Cryptoshandler(w http.ResponseWriter, r *http.Request)  {
+// swagger:route GET /cryptos/btc getBTCPrices
+// Gets BTC prices of sell, buy and spot
+//
+// security:
+// - apiKey: []
+// responses:
+//  200: Crypto
+func (c *CryptoHandler) CryptosHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Cryptos Service invoked.")
 	urlParams := r.URL.Query()
 	log.Println("Header Key: ", urlParams.Get("key"))
@@ -128,35 +151,34 @@ func Cryptoshandler(w http.ResponseWriter, r *http.Request)  {
 	log.Println("Request Parameters: ", params)
 	log.Println("ID: ", id, "  ", found)
 
-	url := "https://api.coinbase.com/v2/prices/BTC-USD/spot"
-	method := "GET"
-
-	client := &http.Client {
-	}
-	req, err := http.NewRequest(method, url, nil)
+	// write the btc response to the response stream
+	btc, err := c.service.GetBTCPrices()
 
 	if err != nil {
-		fmt.Println(err)
-		return
+		// update the response status to 400
+		// write error message
+		w.WriteHeader(http.StatusBadRequest)
+		// return
 	}
 
-	res, err := client.Do(req)
+	//var response map[string]interface{}
+	//json.Unmarshal([]byte(string(body)), &response)
+	//w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	//w.WriteHeader(200)
+
+	json.NewEncoder(w).Encode(btc)
+
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Println("Error: ", err)
 	}
-	defer res.Body.Close()
+	return
+}
 
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(string(body))
+// Fill the handler
+func (c *CryptoHandler) PlaceBuyOrder(w http.ResponseWriter, r *http.Request) {
+	// Get the data from the request body and pass in below function
 
-	var response map[string]interface{}
-	json.Unmarshal([]byte(string(body)), &response)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-	json.NewEncoder(w).Encode(response)
+	// url you will read coinType {coin}
+	//c.orderService.BuyCrypto()
 }

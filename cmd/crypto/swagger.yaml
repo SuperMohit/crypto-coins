@@ -1,0 +1,32 @@
+definitions:
+  Crypto:
+    properties:
+      BuyPrice:
+        description: Buy price of the coin
+        format: double
+        type: number
+      SellPrice:
+        description: Buy price of the coin
+        format: double
+        type: number
+      SpotPrice:
+        description: Sell price of the coin
+        format: double
+        type: number
+    type: object
+    x-go-package: github.com/SuperMohit/cryto-coins/internal/crypto/entity
+info: {}
+paths:
+  /cryptos/btc:
+    get:
+      description: Gets BTC prices of sell, buy and spot
+      operationId: getBTCPrices
+      responses:
+        "200":
+          description: Crypto
+          schema:
+            $ref: '#/definitions/Crypto'
+      security:
+      - apiKey:
+        - '[]'
+swagger: "2.0"

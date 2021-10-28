@@ -1,15 +1,8 @@
 package api
 
 import (
-	"context"
 	"github.com/SuperMohit/cryto-coins/internal/crypto/api/handlers"
-	"github.com/SuperMohit/cryto-coins/internal/crypto/usecase"
 	"github.com/gorilla/mux"
-	"log"
-	"net/http"
-	"os"
-	"os/signal"
-	"time"
 )
 
 /// all the routes specific to crypto
@@ -21,61 +14,46 @@ import (
 ///  GET    /cryptos/doge  ---- DOGE related data
 ///  GET    /cryptos/polka  ---- POLKA related data
 
-const (
-	maxHeaderBytes    = 1024
-	readHeaderTimeout = 0o3
-	readTimeout       = 0o3
-	writeTimeout      = 15
-	idleTimeout       = 60
-	graceTime         = 15
-)
-
 type Crypto struct {
-	serv usecase.CryptoFetcher
+	handler *handlers.CryptoHandler
+}
+
+func NewCrypto(handler *handlers.CryptoHandler) *Crypto {
+	return &Crypto{handler: handler}
 }
 
 type CryptoRouter interface {
 }
 
-func NewCryptoRouter() {
+//  Crypto Api:
+//   version: 0.0.1
+//   title: Crypto API for buying and selling Crypto coins
+//  Schemes: http
+//  Host: localhost:9001
+//  BasePath: /
+//  Produces:
+//    - application/json
+//
+// securityDefinitions:
+//  apiKey:
+//    type: apiKey
+//    in: header
+//    name: authorization
+// swagger:meta
+
+func (c *Crypto) CryptoRouter() *mux.Router {
 	router := mux.NewRouter()
-	router.HandleFunc("/cryptos/btc", handlers.Cryptoshandler).Methods("GET")
+	router.HandleFunc("/cryptos/btc", c.handler.CryptosHandler).Methods("GET")
+
+	// change these as well as member handler functions
 	router.HandleFunc("/cryptos/eth", handlers.Cryptosethandler).Methods("GET")
+
+	//// change these as well as member handler functions
 	router.HandleFunc("/cryptos/doge", handlers.Cryptosdogehandler).Methods("GET")
-	router.HandleFunc("/cryptos/polka", handlers.Cryptospolkahandler).Methods("GET")
-	listen(":9001", router)
-}
+	router.HandleFunc("/cryptos/polka", c.handler.CryptosPolkaHandler).Methods("GET")
 
-func listen(address string, handler http.Handler) {
-	server :=&http.Server{
-		Addr:              address,
-		Handler:           handler,
-		ReadTimeout:       readTimeout * time.Second,
-		ReadHeaderTimeout: readHeaderTimeout * time.Second,
-		WriteTimeout:      writeTimeout * time.Second,
-		IdleTimeout:       idleTimeout * time.Second,
-		MaxHeaderBytes:    maxHeaderBytes,
-	}
+	/// assignment -2 to finish the save to DB flow.
+	router.HandleFunc("/cryptos/{coin}", c.handler.PlaceBuyOrder)
 
-	log.Println("Started and Listening at address: ", address)
-
-	go func() {
-		if err := server.ListenAndServe(); err != nil {
-			log.Println("Error and Shutting down")
-		}
-	}()
-
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	<- c
-
-	log.Println("Shutting down")
-
-	ctx,cancel := context.WithTimeout(context.Background(), graceTime * time.Second)
-	defer cancel()
-
-	if err :=server.Shutdown(ctx);err!= nil {
-		log.Println("Error resulted in shutdown.")
-
-	}
+	return router
 }

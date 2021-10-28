@@ -1,0 +1,50 @@
+{
+  "swagger": "2.0",
+  "info": {},
+  "paths": {
+    "/cryptos/btc": {
+      "get": {
+        "security": [
+          {
+            "apiKey": [
+              "[]"
+            ]
+          }
+        ],
+        "description": "Gets BTC prices of sell, buy and spot",
+        "operationId": "getBTCPrices",
+        "responses": {
+          "200": {
+            "description": "Crypto",
+            "schema": {
+              "$ref": "#/definitions/Crypto"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Crypto": {
+      "type": "object",
+      "properties": {
+        "BuyPrice": {
+          "description": "Buy price of the coin",
+          "type": "number",
+          "format": "double"
+        },
+        "SellPrice": {
+          "description": "Buy price of the coin",
+          "type": "number",
+          "format": "double"
+        },
+        "SpotPrice": {
+          "description": "Sell price of the coin",
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "x-go-package": "github.com/SuperMohit/cryto-coins/internal/crypto/entity"
+    }
+  }
+}
